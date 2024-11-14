@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import math
 
 # mediapipe lines to draw the tracking point on palm of hand
 mp_hands = mp.solutions.hands
@@ -10,7 +11,7 @@ mp_draw = mp.solutions.drawing_utils
 draw_color = (255, 255, 255)
 canvas = None
 drawing = False
-last_x, last_y = None, None
+last_ix, last_iy = None, None
 wCam, hCam = 1080, 720
 button_state = False
 
@@ -41,19 +42,28 @@ while True:
             # landmark.x * w gives the pixel location for x.
             # landmark.y * h gives the pixel location for y.
             # This converts the normalized values into pixel-based coordinates that can be used directly on the frame.
-            x = int(hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * w)
-            y = int(hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * h)
+            ix = int(hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].x * w)
+            iy = int(hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * h)
 
-            if last_x is not None and last_y is not None:
-                cv2.line(canvas, (last_x, last_y), (x, y), draw_color, 5)
+            tx = int(hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].x * w)
+            ty = int(hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].y * h)
 
-            last_x, last_y = x, y
+            cv2.circle(frame, (tx, ty), 16, (68,214,44), 4)
+            cv2.circle(frame, (ix, iy), 16, (68,214,44), 4)
+
+            thumb_index_distance = int(math.hypot(tx - ix, ty - iy))
+            #print(thumb_index_distance)
+
+            if thumb_index_distance > 30 and last_ix is not None and last_iy is not None:
+                cv2.line(canvas, (last_ix, last_iy), (ix, iy), draw_color, 5)
+
+            last_ix, last_iy = ix, iy
 
             mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
     else:
         #if no hand is detected then reseting back to NONE
-        last_x, last_y = None, None
+        last_ix, last_iy = None, None
 
     #OpenCV’s addWeighted() function to overlay the canvas (where the drawing occurs) onto the frame (the live video feed) to create a combined frame with both the original video and the drawn lines.
     combine_frame = cv2.addWeighted(frame, 0.5, canvas, 0.5, 0)
