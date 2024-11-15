@@ -6,6 +6,7 @@ This is a python based gesture drawing piece of code, programmed just for fun.
   -Smooth lines <br>
   -Press 'c' to clear the canvas anytime. <br>
   -Press 'q' to exit the canvas anytime. <br>
+  -To erase join middle finger and index finger. <br>
 
 # Getting Started 
   -Python 3.x <br>
